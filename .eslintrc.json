@@ -1,0 +1,23 @@
+{
+  "extends": ["standard", "prettier", "prettier/standard"],
+  "plugins": ["import", "prettier", "standard"],
+  "parserOptions": {
+    "ecmaVersion": 2020
+  },
+  "env": {
+    "node": true,
+    "es6": true
+  },
+  "rules": {
+    "prettier/prettier": [
+      "error",
+      {
+        "trailingComma": "es5",
+        "tabWidth": 2,
+        "semi": true,
+        "singleQuote": true,
+        "endOfLine": "auto"
+      }
+    ]
+  }
+}
