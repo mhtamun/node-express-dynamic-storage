@@ -4,6 +4,7 @@ import _ from 'lodash';
 import logger from './logger.js';
 import envVariables from './env.js';
 import { extname } from 'path';
+import { convertToWebp } from './webpConverter.js';
 
 export const fileUtil = {
   validateFile(file, allowedExts = ['jpeg', 'jpg', 'png']) {
@@ -56,6 +57,9 @@ export const fileUtil = {
       });
 
       file.pipe(fileStream);
+
+      //convert image to webp
+      convertToWebp(dirPath, fileName, fileExtension, filePath);
 
       file.on('end', (e) => {
         if (e) {
