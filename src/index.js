@@ -2,11 +2,14 @@ import express from 'express';
 import cors from 'cors';
 import allRoutes from './routes/index.js';
 import logger from './utils/logger.js';
+import Boom from 'express-boom';
 
 try {
   const app = express();
 
   app.use(cors());
+
+  app.use(Boom());
 
   //serve static files
   app.use(express.static('public'));

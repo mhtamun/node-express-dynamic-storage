@@ -58,8 +58,22 @@ export const fileUtil = {
 
       file.pipe(fileStream);
 
-      //convert image to webp
-      convertToWebp(dirPath, fileName, fileExtension, filePath);
+      if (
+        fileExtension.toLowerCase() === '.jpg' ||
+        fileExtension.toLowerCase() === '.png' ||
+        fileExtension.toLowerCase() === '.jpeg' ||
+        fileExtension.toLowerCase() === '.JPG' ||
+        fileExtension.toLowerCase() === '.JPEG' ||
+        fileExtension.toLowerCase() === '.PNG'
+      ) {
+        //convert image to webp
+        convertToWebp(dirPath, fileName, filePath);
+      } else {
+        throw {
+          name: 'badRequest',
+          message: 'Please select jpg/jpeg/png image',
+        };
+      }
 
       file.on('end', (e) => {
         if (e) {
