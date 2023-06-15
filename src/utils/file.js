@@ -7,7 +7,7 @@ import { extname } from 'path';
 import { convertToWebp } from './webpConverter.js';
 
 export const fileUtil = {
-  validateFile(file, allowedExts = ['jpeg', 'jpg', 'png']) {
+  validateFile: (file, allowedExts = ['jpeg', 'jpg', 'png']) => {
     if (_.isUndefined(file) || _.isNull(file))
       throw {
         name: 'badRequest',
@@ -15,7 +15,7 @@ export const fileUtil = {
       };
 
     if (
-      !_.some(allowedExts, (ext) => _.includes(extname(file.originalName), ext))
+      !_.some(allowedExts, (ext) => _.includes(extname(file.originalname), ext))
     )
       throw {
         name: 'badRequest',
@@ -28,9 +28,22 @@ export const fileUtil = {
     return tempArray[_.size(tempArray) - 1];
   },
 
-  checkFileExists: (folderName, fileNameWithExtension) => {
+  checkFileExists: (folderName, fileName, fileExtension) => {
     const dirPath = path.join(envVariables.ATTACHMENT_FOLDER_PATH, folderName);
-    const filePath = `${dirPath}/${fileNameWithExtension}`;
+    let filePath;
+    if (
+      fileExtension.toLowerCase() === 'jpg' ||
+      fileExtension.toLowerCase() === 'png' ||
+      fileExtension.toLowerCase() === 'jpeg'
+    ) {
+      filePath = `${dirPath}/${fileName}.webp`;
+    } else {
+      filePath = `${dirPath}/${fileName}.${fileExtension}`;
+    }
+
+    if (fileExtension.toLowerCase() === 'webp') {
+      filePath = `${dirPath}/${fileName}`;
+    }
 
     return new Promise((resolve, reject) => {
       resolve(fs.existsSync(filePath));
@@ -47,49 +60,28 @@ export const fileUtil = {
 
       const filePath = `${dirPath}/${fileName}.${fileExtension}`;
 
-      const fileStream = fs.createWriteStream(filePath);
-
-      file.on('start', (e) => {
-        if (e) {
-          logger.error('file.js: file.on -> start', e);
-          reject(e);
-        }
-      });
-
-      file.pipe(fileStream);
-
       if (
-        fileExtension.toLowerCase() === '.jpg' ||
-        fileExtension.toLowerCase() === '.png' ||
-        fileExtension.toLowerCase() === '.jpeg' ||
-        fileExtension.toLowerCase() === '.JPG' ||
-        fileExtension.toLowerCase() === '.JPEG' ||
-        fileExtension.toLowerCase() === '.PNG'
+        fileExtension.toLowerCase() === 'jpg' ||
+        fileExtension.toLowerCase() === 'png' ||
+        fileExtension.toLowerCase() === 'jpeg'
       ) {
         //convert image to webp
-        convertToWebp(dirPath, fileName, filePath);
+        convertToWebp(dirPath, fileName, file);
+
+        resolve(true);
       } else {
         throw {
           name: 'badRequest',
           message: 'Please select jpg/jpeg/png image',
         };
       }
-
-      file.on('end', (e) => {
-        if (e) {
-          logger.error('file.js: file.on -> end', e);
-          reject(e);
-        }
-
-        resolve(true);
-      });
     });
   },
 
   getFile: (folderName, fileName) =>
     path.join(envVariables.ATTACHMENT_FOLDER_PATH, folderName, fileName),
 
-  deleteFile: (folderName, fileNameWithExtension) => {
+  removeFile: (folderName, fileNameWithExtension) => {
     const dirPath = path.join(envVariables.ATTACHMENT_FOLDER_PATH, folderName);
 
     return new Promise((resolve, reject) => {
