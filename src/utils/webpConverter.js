@@ -14,7 +14,8 @@ export const convertToWebp = (dirPath, fileName, file) => {
       return webpPath;
     })
     .catch((error) => {
-      console.log(error);
+      console.error(error);
+
       throw {
         name: 'internalServerError',
         message: error,

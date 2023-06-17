@@ -1,4 +1,10 @@
 export const httpResponse = (response, name, message, data) => {
+  if (name === 'success') {
+    return response
+      .status(200)
+      .json({ statusCode: 200, success: true, message, data });
+  }
+
   if (name === 'badRequest') {
     return response
       .status(400)
@@ -23,15 +29,9 @@ export const httpResponse = (response, name, message, data) => {
       .json({ statusCode: 404, success: false, message, data });
   }
 
-  if (name === 'success') {
-    return response
-      .status(200)
-      .json({ statusCode: 200, success: true, message, data });
-  }
-
   return response.status(500).json({
     statusCode: 500,
     success: false,
-    message: data,
+    message,
   });
 };

@@ -44,7 +44,7 @@ export const uploadFile = async (req, res) => {
 
     await saveFile(folderName, fileNameRandom, fileExtension, file);
 
-    httpResponse(res, 'success', {
+    httpResponse(res, 'success', 'File uploaded successfully!', {
       url:
         envVariables.PUBLIC_URL +
         `/content/folders/${folderName}/files/${fileNameRandom}.${fileExtension}`,
@@ -57,42 +57,46 @@ export const uploadFile = async (req, res) => {
 
     logger.error(tag + ': add', error);
 
-    httpResponse(res, '', error);
+    httpResponse(res, '', error.message);
   }
 };
 
 //get file
 export const fetchFile = async (req, res) => {
   try {
-    const { folderName, fileName } = req.body;
+    const { folderName, fileName } = req.params;
 
     const file = getFile(folderName, fileName);
-
-    console.log(file);
 
     httpResponse(res, 'success', 'File fetched successfully', file);
   } catch (error) {
     logger.error(tag + ': get', error);
 
-    httpResponse(res, '', error);
+    httpResponse(res, '', error.message);
   }
 };
 
 //update file
 export const updateFile = async (req, res) => {
+  let file;
   try {
     const {
       folderName: newFolderName,
       fileName: newFileName,
-      file,
       allowedExtensions,
     } = req.body;
+
+    file = req.file;
 
     const { folderName: oldFolderName, fileName: oldFileName } = req.params;
 
     validateFile(file, allowedExtensions);
 
-    const isFileExists = await checkFileExists(oldFolderName, oldFileName);
+    const isFileExists = await checkFileExists(
+      oldFolderName,
+      oldFileName.split('.')[0],
+      oldFileName.split('.')[1]
+    );
 
     if (!isFileExists)
       throw {
@@ -100,27 +104,26 @@ export const updateFile = async (req, res) => {
         message: 'File not found to replace!',
       };
 
-    await deleteFile(oldFolderName, oldFileName);
+    await removeFile(oldFolderName, oldFileName);
 
     const fileExtension = getFileExtension(file && file.originalname);
 
     await saveFile(newFolderName, newFileName, fileExtension, file);
 
-    return {
-      success: true,
-      data: {
-        url:
-          PUBLIC_URL +
-          `/content/folders/${newFolderName}/files/${newFileName}.${fileExtension}`,
-        localUrl:
-          LOCAL_URL +
-          `/content/folders/${newFolderName}/files/${newFileName}.${fileExtension}`,
-      },
-    };
+    httpResponse(res, 'success', 'File updated successfully', {
+      url:
+        envVariables.PUBLIC_URL +
+        `/content/folders/${newFolderName}/files/${newFileName}.${fileExtension}`,
+      localUrl:
+        envVariables.LOCAL_URL +
+        `/content/folders/${newFolderName}/files/${newFileName}.${fileExtension}`,
+    });
   } catch (error) {
+    file.path && fs.unlinkSync(file.path);
+
     logger.error(tag + ': edit', error);
 
-    return { success: false, data: error };
+    httpResponse(res, '', error.message);
   }
 };
 
@@ -131,7 +134,7 @@ export const deleteFile = async (req, res) => {
 
     const isFileExists = await checkFileExists(
       folderName,
-      fileName,
+      fileName.split('.')[0],
       fileName.split('.')[1]
     );
 
@@ -147,6 +150,6 @@ export const deleteFile = async (req, res) => {
   } catch (error) {
     logger.error(tag + ': edit', error);
 
-    httpResponse(res, '', error);
+    httpResponse(res, '', error.message);
   }
 };

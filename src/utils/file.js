@@ -41,10 +41,6 @@ export const fileUtil = {
       filePath = `${dirPath}/${fileName}.${fileExtension}`;
     }
 
-    if (fileExtension.toLowerCase() === 'webp') {
-      filePath = `${dirPath}/${fileName}`;
-    }
-
     return new Promise((resolve, reject) => {
       resolve(fs.existsSync(filePath));
     });
@@ -67,14 +63,9 @@ export const fileUtil = {
       ) {
         //convert image to webp
         convertToWebp(dirPath, fileName, file);
-
-        resolve(true);
-      } else {
-        throw {
-          name: 'badRequest',
-          message: 'Please select jpg/jpeg/png image',
-        };
       }
+
+      resolve(true);
     });
   },
 
