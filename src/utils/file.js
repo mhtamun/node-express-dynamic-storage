@@ -63,6 +63,21 @@ export const fileUtil = {
       ) {
         //convert image to webp
         convertToWebp(dirPath, fileName, file);
+      } else {
+        //gets file name and move it to desired directory
+        let renamedFile = path.basename(
+          `${envVariables.ATTACHMENT_FOLDER_PATH}/${fileName}.${fileExtension}`
+        );
+        let dest = path.resolve(`${dirPath}/`, renamedFile);
+
+        fs.rename(
+          `${envVariables.ATTACHMENT_FOLDER_PATH}/${file.originalname}`,
+          dest,
+          (err) => {
+            if (err) throw err;
+            console.log('Successfully moved');
+          }
+        );
       }
 
       resolve(true);
