@@ -10,6 +10,10 @@ const envVariables = {
   SECRET_KEY: process.env.SECRET_KEY,
   // Attachments folder path
   ATTACHMENT_FOLDER_PATH: process.env.ATTACHMENT_FOLDER_PATH,
+  //cloudinary
+  CLOUDINARY_NAME: process.env.CLOUDINARY_NAME,
+  CLOUDINARY_API_KEY: process.env.CLOUDINARY_API_KEY,
+  CLOUDINARY_API_SECRET: process.env.CLOUDINARY_API_SECRET,
   // Access URL
   PUBLIC_URL: process.env.PUBLIC_URL,
   LOCAL_URL: process.env.LOCAL_URL,

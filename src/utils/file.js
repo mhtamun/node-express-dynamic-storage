@@ -5,6 +5,12 @@ import logger from './logger.js';
 import envVariables from './env.js';
 import { extname } from 'path';
 import { convertToWebp } from './webpConverter.js';
+import {
+  removeFromCloudinary,
+  uploadToCloudinary,
+} from './cloudinaryUploader.js';
+
+const isCloudinary = true;
 
 export const fileUtil = {
   validateFile: (file, allowedExts = ['jpeg', 'jpg', 'png']) => {
@@ -62,7 +68,14 @@ export const fileUtil = {
         fileExtension.toLowerCase() === 'jpeg'
       ) {
         //convert image to webp
-        convertToWebp(dirPath, fileName, file);
+        convertToWebp(dirPath, fileName, file, (data) => {
+          fs.unlinkSync(file.path);
+
+          console.log(data);
+
+          //upload to cloudinary
+          isCloudinary && uploadToCloudinary(`${dirPath}/${fileName}.webp`);
+        });
       } else {
         //gets file name and move it to desired directory
         let renamedFile = path.basename(
@@ -78,6 +91,8 @@ export const fileUtil = {
             console.log('Successfully moved');
           }
         );
+
+        isCloudinary && uploadToCloudinary(filePath);
       }
 
       resolve(true);
@@ -93,14 +108,31 @@ export const fileUtil = {
     return new Promise((resolve, reject) => {
       const filePath = `${dirPath}/${fileNameWithExtension}`;
 
-      fs.unlink(filePath, (e) => {
-        if (e) {
-          logger.error('file.js', e);
-          reject(e);
-        }
+      //remove from cloudinary
+      if (isCloudinary) {
+        removeFromCloudinary(
+          fileNameWithExtension.split('.')[0],
+          async (error, result) => {
+            if (error || result.result === 'not found') {
+              logger.error('file.js', error);
+              reject(error ?? result.result);
+            }
 
-        resolve(true);
-      });
+            console.log('result', result);
+            resolve(true);
+          }
+        );
+      } else {
+        //remove from attachment
+        fs.unlink(filePath, (e) => {
+          if (e) {
+            logger.error('file.js', e);
+            reject(e);
+          }
+
+          resolve(true);
+        });
+      }
     });
   },
 };

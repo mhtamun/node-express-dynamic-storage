@@ -78,6 +78,7 @@ export const fetchFile = async (req, res) => {
 
 //update file
 export const updateFile = async (req, res) => {
+  const isCloudinary = true;
   let file;
   try {
     const {
@@ -92,17 +93,19 @@ export const updateFile = async (req, res) => {
 
     validateFile(file, allowedExtensions);
 
-    const isFileExists = await checkFileExists(
-      oldFolderName,
-      oldFileName.split('.')[0],
-      oldFileName.split('.')[1]
-    );
+    if (!isCloudinary) {
+      const isFileExists = await checkFileExists(
+        oldFolderName,
+        oldFileName.split('.')[0],
+        oldFileName.split('.')[1]
+      );
 
-    if (!isFileExists)
-      throw {
-        name: 'badRequest',
-        message: 'File not found to replace!',
-      };
+      if (!isFileExists)
+        throw {
+          name: 'badRequest',
+          message: 'File not found to replace!',
+        };
+    }
 
     await removeFile(oldFolderName, oldFileName);
 
@@ -129,20 +132,23 @@ export const updateFile = async (req, res) => {
 
 //delete file
 export const deleteFile = async (req, res) => {
+  const isCloudinary = true;
   try {
     const { folderName, fileName } = req.params;
 
-    const isFileExists = await checkFileExists(
-      folderName,
-      fileName.split('.')[0],
-      fileName.split('.')[1]
-    );
+    if (!isCloudinary) {
+      const isFileExists = await checkFileExists(
+        folderName,
+        fileName.split('.')[0],
+        fileName.split('.')[1]
+      );
 
-    if (!isFileExists)
-      throw {
-        name: 'badRequest',
-        message: 'File not found to delete!',
-      };
+      if (!isFileExists)
+        throw {
+          name: 'badRequest',
+          message: 'File not found to delete!',
+        };
+    }
 
     await removeFile(folderName, fileName);
 
