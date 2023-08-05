@@ -4,9 +4,16 @@ import _ from 'lodash';
 import logger from './logger.js';
 import envVariables from './env.js';
 import { extname } from 'path';
+import { convertToWebp } from './webpConverter.js';
+import {
+  removeFromCloudinary,
+  uploadToCloudinary,
+} from './cloudinaryUploader.js';
+
+const isCloudinary = true;
 
 export const fileUtil = {
-  validateFile(file, allowedExts = ['jpeg', 'jpg', 'png']) {
+  validateFile: (file, allowedExts = ['jpeg', 'jpg', 'png']) => {
     if (_.isUndefined(file) || _.isNull(file))
       throw {
         name: 'badRequest',
@@ -14,7 +21,7 @@ export const fileUtil = {
       };
 
     if (
-      !_.some(allowedExts, (ext) => _.includes(extname(file.originalName), ext))
+      !_.some(allowedExts, (ext) => _.includes(extname(file.originalname), ext))
     )
       throw {
         name: 'badRequest',
@@ -27,9 +34,18 @@ export const fileUtil = {
     return tempArray[_.size(tempArray) - 1];
   },
 
-  checkFileExists: (folderName, fileNameWithExtension) => {
+  checkFileExists: (folderName, fileName, fileExtension) => {
     const dirPath = path.join(envVariables.ATTACHMENT_FOLDER_PATH, folderName);
-    const filePath = `${dirPath}/${fileNameWithExtension}`;
+    let filePath;
+    if (
+      fileExtension.toLowerCase() === 'jpg' ||
+      fileExtension.toLowerCase() === 'png' ||
+      fileExtension.toLowerCase() === 'jpeg'
+    ) {
+      filePath = `${dirPath}/${fileName}.webp`;
+    } else {
+      filePath = `${dirPath}/${fileName}.${fileExtension}`;
+    }
 
     return new Promise((resolve, reject) => {
       resolve(fs.existsSync(filePath));
@@ -46,45 +62,77 @@ export const fileUtil = {
 
       const filePath = `${dirPath}/${fileName}.${fileExtension}`;
 
-      const fileStream = fs.createWriteStream(filePath);
+      if (
+        fileExtension.toLowerCase() === 'jpg' ||
+        fileExtension.toLowerCase() === 'png' ||
+        fileExtension.toLowerCase() === 'jpeg'
+      ) {
+        //convert image to webp
+        convertToWebp(dirPath, fileName, file, (data) => {
+          fs.unlinkSync(file.path);
 
-      file.on('start', (e) => {
-        if (e) {
-          logger.error('file.js: file.on -> start', e);
-          reject(e);
-        }
-      });
+          console.log(data);
 
-      file.pipe(fileStream);
+          //upload to cloudinary
+          isCloudinary && uploadToCloudinary(`${dirPath}/${fileName}.webp`);
+        });
+      } else {
+        //gets file name and move it to desired directory
+        let renamedFile = path.basename(
+          `${envVariables.ATTACHMENT_FOLDER_PATH}/${fileName}.${fileExtension}`
+        );
+        let dest = path.resolve(`${dirPath}/`, renamedFile);
 
-      file.on('end', (e) => {
-        if (e) {
-          logger.error('file.js: file.on -> end', e);
-          reject(e);
-        }
+        fs.rename(
+          `${envVariables.ATTACHMENT_FOLDER_PATH}/${file.originalname}`,
+          dest,
+          (err) => {
+            if (err) throw err;
+            console.log('Successfully moved');
+          }
+        );
 
-        resolve(true);
-      });
+        isCloudinary && uploadToCloudinary(filePath);
+      }
+
+      resolve(true);
     });
   },
 
   getFile: (folderName, fileName) =>
     path.join(envVariables.ATTACHMENT_FOLDER_PATH, folderName, fileName),
 
-  deleteFile: (folderName, fileNameWithExtension) => {
+  removeFile: (folderName, fileNameWithExtension) => {
     const dirPath = path.join(envVariables.ATTACHMENT_FOLDER_PATH, folderName);
 
     return new Promise((resolve, reject) => {
       const filePath = `${dirPath}/${fileNameWithExtension}`;
 
-      fs.unlink(filePath, (e) => {
-        if (e) {
-          logger.error('file.js', e);
-          reject(e);
-        }
+      //remove from cloudinary
+      if (isCloudinary) {
+        removeFromCloudinary(
+          fileNameWithExtension.split('.')[0],
+          async (error, result) => {
+            if (error || result.result === 'not found') {
+              logger.error('file.js', error);
+              reject(error ?? result.result);
+            }
 
-        resolve(true);
-      });
+            console.log('result', result);
+            resolve(true);
+          }
+        );
+      } else {
+        //remove from attachment
+        fs.unlink(filePath, (e) => {
+          if (e) {
+            logger.error('file.js', e);
+            reject(e);
+          }
+
+          resolve(true);
+        });
+      }
     });
   },
 };
