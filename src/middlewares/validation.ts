@@ -8,3 +8,4 @@ export const validateFileInput = Joi.object().keys({
     .items(Joi.string().max(255).required().trim())
     .min(1),
 });
+

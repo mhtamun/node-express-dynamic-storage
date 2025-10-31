@@ -1,12 +1,13 @@
 import { createLogger, format, transports } from 'winston';
 import DailyRotateFile from 'winston-daily-rotate-file';
+import envVariables from '../utils/env.js';
+
 const { combine, timestamp, colorize, errors, prettyPrint, simple } = format;
 const timestampFormat = { format: 'YYYY-MM-DD HH:mm:ss' };
-import envVariables from '../utils/env.js';
 
 export const debugLogger = createLogger({
   level: 'debug',
-  defaultMeta: { service: 'r-and-s-s2' },
+  defaultMeta: { service: 'node-express-dynamic-storage' },
   transports: [
     new DailyRotateFile({
       filename: envVariables.LOG_DIR_PATH + '/debug.log',
@@ -14,7 +15,7 @@ export const debugLogger = createLogger({
       format: combine(
         timestamp(timestampFormat),
         errors({ stack: true }),
-        prettyPrint()
+        prettyPrint(),
       ),
     }),
     new transports.Console({
@@ -23,7 +24,7 @@ export const debugLogger = createLogger({
         colorize(),
         timestamp(timestampFormat),
         errors({ stack: true }),
-        simple()
+        simple(),
       ),
     }),
   ],
@@ -31,7 +32,7 @@ export const debugLogger = createLogger({
 
 export const infoLogger = createLogger({
   level: 'info',
-  defaultMeta: { service: 'r-and-s-s2' },
+  defaultMeta: { service: 'node-express-dynamic-storage' },
   transports: [
     new DailyRotateFile({
       filename: envVariables.LOG_DIR_PATH + '/info.log',
@@ -39,7 +40,7 @@ export const infoLogger = createLogger({
       format: combine(
         timestamp(timestampFormat),
         errors({ stack: true }),
-        prettyPrint()
+        prettyPrint(),
       ),
     }),
   ],
@@ -47,7 +48,7 @@ export const infoLogger = createLogger({
 
 export const errorLogger = createLogger({
   level: 'error',
-  defaultMeta: { service: 'r-and-s-s2' },
+  defaultMeta: { service: 'node-express-dynamic-storage' },
   transports: [
     new DailyRotateFile({
       filename: envVariables.LOG_DIR_PATH + '/error.log',
@@ -55,7 +56,7 @@ export const errorLogger = createLogger({
       format: combine(
         timestamp(timestampFormat),
         errors({ stack: true }),
-        prettyPrint()
+        prettyPrint(),
       ),
     }),
     new transports.Console({
@@ -64,8 +65,9 @@ export const errorLogger = createLogger({
         colorize(),
         timestamp(timestampFormat),
         errors({ stack: true }),
-        simple()
+        simple(),
       ),
     }),
   ],
 });
+

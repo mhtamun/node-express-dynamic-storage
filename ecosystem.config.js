@@ -2,11 +2,11 @@ const config = {
   apps: [
     {
       name: 'node-express-dynamic-storage',
-      script: './src/index.js',
+      script: './dist/index.js',
       instances: 'max',
       exec_mode: 'cluster',
       watch: false,
-      ignore_watch: ['node_modules'],
+      ignore_watch: ['node_modules', 'dist'],
     },
   ],
 };

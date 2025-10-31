@@ -20,9 +20,13 @@ yarn-error.log*
 .env.test.local
 .env.production.local
 
-# IDE 
+# IDE
 /.vscode/
 /.idea/
 
 # project specific
 /attachments
+
+# TypeScript build output
+/dist
+*.tsbuildinfo
